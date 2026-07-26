@@ -212,6 +212,8 @@
   .btn-approve{ background:var(--grass); color:var(--white); }
   .btn-deny{ background:transparent; border:1.5px solid #B5493D; color:#B5493D; }
   .btn-deny:hover{ background:#FBEAE7; }
+  .btn-delete{ background:transparent; border:1.5px solid var(--line); color:#8A8A7A; }
+  .btn-delete:hover{ background:var(--cream); color:#B5493D; border-color:#B5493D; }
   .btn:disabled{ opacity:0.45; cursor:default; }
 
   .submit-row{
@@ -436,6 +438,7 @@
 
 <footer>fresh line lawn co. — booking &amp; admin panel</footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <script>
 (function(){
   // Shared admin password. Change this string to change the password everywhere
@@ -443,63 +446,27 @@
   // unless you re-derive with the old password).
   const ADMIN_PASSCODE = "heybikedaddy";
 
-  // Fixed salt for key derivation. Not secret — salts just need to be unique per app,
-  // not hidden — the password is what does the protecting.
-  const KDF_SALT = "fresh-line-lawn-co-v1";
-  const KDF_ITERATIONS = 150000;
-
   let adminUnlocked = false;
-  let cachedKey = null; // derived AES-GCM CryptoKey, cached in memory for this session only
 
   // ---------- crypto helpers ----------
-  function bufToB64(buf){
-    return btoa(String.fromCharCode(...new Uint8Array(buf)));
-  }
-  function b64ToBuf(b64){
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-  }
-  async function sha256Hex(str){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  // Uses CryptoJS (pure JavaScript) rather than the browser's native Web Crypto API,
+  // since native crypto.subtle isn't reliably available inside a sandboxed artifact frame.
+  function sha256Hex(str){
+    return CryptoJS.SHA256(str).toString(CryptoJS.enc.Hex);
   }
   function normalizePhone(p){ return (p || '').replace(/\D/g, ''); }
   function normalizeEmail(e){ return (e || '').trim().toLowerCase(); }
 
-  // Turns the shared passcode into a proper AES-256 key via PBKDF2, instead of
-  // using the raw password bytes directly — this is standard practice and makes
-  // brute-forcing the key meaningfully slower than guessing the password itself.
-  async function deriveKey(passcode){
-    const baseKey = await crypto.subtle.importKey(
-      'raw', new TextEncoder().encode(passcode), 'PBKDF2', false, ['deriveKey']
-    );
-    return crypto.subtle.deriveKey(
-      { name:'PBKDF2', salt:new TextEncoder().encode(KDF_SALT), iterations:KDF_ITERATIONS, hash:'SHA-256' },
-      baseKey,
-      { name:'AES-GCM', length:256 },
-      false,
-      ['encrypt','decrypt']
-    );
+  function encryptPII(obj){
+    const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(obj), ADMIN_PASSCODE).toString();
+    return { ciphertext };
   }
 
-  async function getKey(){
-    if(!cachedKey) cachedKey = await deriveKey(ADMIN_PASSCODE);
-    return cachedKey;
-  }
-
-  async function encryptPII(obj){
-    const key = await getKey();
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const plaintext = new TextEncoder().encode(JSON.stringify(obj));
-    const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plaintext);
-    return { iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
-  }
-
-  async function decryptPII(record){
-    const key = await getKey();
-    const plainBuf = await crypto.subtle.decrypt(
-      { name:'AES-GCM', iv: b64ToBuf(record.iv) }, key, b64ToBuf(record.ciphertext)
-    );
-    return JSON.parse(new TextDecoder().decode(plainBuf));
+  function decryptPII(record){
+    const bytes = CryptoJS.AES.decrypt(record.ciphertext, ADMIN_PASSCODE);
+    const plaintext = bytes.toString(CryptoJS.enc.Utf8);
+    if(!plaintext) throw new Error('decrypt failed');
+    return JSON.parse(plaintext);
   }
 
   const tabBook = document.getElementById('tab-book');
@@ -545,7 +512,6 @@
 
   document.getElementById('admin-lock-btn').addEventListener('click', () => {
     adminUnlocked = false;
-    cachedKey = null; // wipe the derived key from memory too
     showPanel('admin');
   });
 
@@ -556,6 +522,10 @@
 
   async function saveAppointment(appt){
     return await window.storage.set('appt:' + appt.id, JSON.stringify(appt), true);
+  }
+
+  async function deleteAppointment(id){
+    return await window.storage.delete('appt:' + id, true);
   }
 
   async function listAppointments(){
@@ -597,7 +567,7 @@
     }
 
     try{
-      const enc = await encryptPII({ name, phone, email, address, notes });
+      const enc = encryptPII({ name, phone, email, address, notes });
       const appt = {
         id: genId(),
         service: document.getElementById('b-service').value,
@@ -606,9 +576,8 @@
         lawnSize: document.getElementById('b-lawnsize').value,
         status: 'pending',
         createdAt: Date.now(),
-        phoneHash: await sha256Hex(normalizePhone(phone)),
-        emailHash: email ? await sha256Hex(normalizeEmail(email)) : '',
-        iv: enc.iv,
+        phoneHash: sha256Hex(normalizePhone(phone)),
+        emailHash: email ? sha256Hex(normalizeEmail(email)) : '',
         ciphertext: enc.ciphertext
       };
       const result = await saveAppointment(appt);
@@ -673,6 +642,7 @@
       <div class="actions">
         <button class="btn btn-approve" data-action="approve" data-id="${a.id}" ${a.status==='approved'?'disabled':''}>Approve</button>
         <button class="btn btn-deny" data-action="deny" data-id="${a.id}" ${a.status==='denied'?'disabled':''}>Deny</button>
+        <button class="btn btn-delete" data-action="delete" data-id="${a.id}">Delete</button>
       </div>`;
 
     if(a.decryptFailed){
@@ -752,6 +722,26 @@
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
         const action = btn.dataset.action;
+
+        if(action === 'delete'){
+          const card = btn.closest('.appt-card');
+          const alreadyConfirming = card.querySelector('.confirm-delete-row');
+          if(!alreadyConfirming){
+            const row = document.createElement('div');
+            row.className = 'confirm-delete-row';
+            row.style.cssText = 'margin-top:12px; display:flex; align-items:center; gap:10px; font-size:13.5px; color:#B5493D;';
+            row.innerHTML = `Delete this request for good? <button class="btn btn-deny" data-confirm-delete="${id}" style="padding:8px 14px;">Yes, delete</button> <button class="btn btn-ghost" data-cancel-delete style="padding:8px 14px;">Cancel</button>`;
+            card.appendChild(row);
+            row.querySelector('[data-confirm-delete]').addEventListener('click', async () => {
+              row.textContent = 'Deleting...';
+              await deleteAppointment(id);
+              loadAdminList();
+            });
+            row.querySelector('[data-cancel-delete]').addEventListener('click', () => row.remove());
+          }
+          return;
+        }
+
         btn.disabled = true;
         btn.textContent = '...';
         const all2 = await listAppointments();
