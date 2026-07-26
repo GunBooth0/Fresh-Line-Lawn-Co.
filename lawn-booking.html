@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fresh Line Lawn Co. — Book a Mow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pine:#1F3D2B;
+    --grass:#4F7942;
+    --stripe:#8FBC6B;
+    --cream:#F5F0E1;
+    --clay:#C97B3D;
+    --ink:#26261F;
+    --line: rgba(31,61,43,0.14);
+    --white:#FFFDF8;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- stripe motif (signature element) ---------- */
+  .mow-stripes{
+    background-image: repeating-linear-gradient(
+      115deg,
+      var(--grass) 0px, var(--grass) 46px,
+      var(--stripe) 46px, var(--stripe) 92px
+    );
+  }
+
+  /* ---------- header / hero ---------- */
+  header.hero{
+    position:relative;
+    padding:64px 24px 96px;
+    color:var(--white);
+    overflow:hidden;
+  }
+  header.hero .stripe-bg{
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(
+      115deg,
+      #3C6236 0px, #3C6236 46px,
+      #557F45 46px, #557F45 92px
+    );
+    opacity:0.97;
+  }
+  header.hero .stripe-bg::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(19,36,25,0.15) 0%, rgba(19,36,25,0.75) 100%);
+  }
+  .hero-inner{ position:relative; max-width:920px; margin:0 auto; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase;
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.3);
+    padding:6px 12px; border-radius:100px;
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{ width:6px;height:6px;border-radius:50%; background:var(--clay); }
+  header.hero h1{
+    font-size:clamp(34px, 5.4vw, 58px);
+    font-weight:700;
+    line-height:1.04;
+    max-width:12ch;
+  }
+  header.hero p.sub{
+    margin-top:18px;
+    font-size:17px;
+    max-width:46ch;
+    color:rgba(255,253,248,0.86);
+    line-height:1.55;
+  }
+
+  /* ---------- nav tabs ---------- */
+  nav.tabs{
+    position:relative;
+    max-width:920px;
+    margin:-46px auto 0;
+    padding:0 24px;
+    display:flex;
+    gap:8px;
+    z-index:5;
+  }
+  nav.tabs button{
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    padding:14px 20px;
+    border-radius:var(--radius) var(--radius) 0 0;
+    border:1px solid var(--line);
+    border-bottom:none;
+    background:var(--white);
+    color:var(--pine);
+    opacity:0.6;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  nav.tabs button.active{
+    opacity:1;
+    box-shadow:0 -2px 14px rgba(31,61,43,0.08);
+  }
+  nav.tabs button:hover{ opacity:0.85; }
+  nav.tabs .spacer{ flex:1; }
+  nav.tabs .admin-btn{
+    background:transparent;
+    border:none;
+    color:var(--pine);
+    opacity:0.45;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    align-self:center;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  nav.tabs .admin-btn:hover{ opacity:0.8; }
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 24px 80px;
+  }
+  .panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:0 var(--radius) var(--radius) var(--radius);
+    padding:40px;
+    box-shadow:0 2px 24px rgba(31,61,43,0.06);
+  }
+  @media (max-width:640px){ .panel{ padding:26px 20px; } }
+
+  .field-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px 20px;
+    margin-top:28px;
+  }
+  .field-grid .full{ grid-column:1 / -1; }
+  @media (max-width:640px){ .field-grid{ grid-template-columns:1fr; } }
+
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--pine);
+    margin-bottom:7px;
+  }
+  input, select, textarea{
+    width:100%;
+    font-family:'Work Sans', sans-serif;
+    font-size:15px;
+    padding:12px 13px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:var(--cream);
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  input:focus, select:focus, textarea:focus{
+    border-color:var(--grass);
+    background:var(--white);
+  }
+  textarea{ resize:vertical; min-height:80px; }
+
+  .btn{
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px 26px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{ background:var(--clay); color:var(--white); }
+  .btn-primary:hover{ opacity:0.92; }
+  .btn-ghost{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--pine);
+  }
+  .btn-ghost:hover{ background:var(--cream); }
+  .btn-approve{ background:var(--grass); color:var(--white); }
+  .btn-deny{ background:transparent; border:1.5px solid #B5493D; color:#B5493D; }
+  .btn-deny:hover{ background:#FBEAE7; }
+  .btn:disabled{ opacity:0.45; cursor:default; }
+
+  .submit-row{
+    margin-top:30px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .status-msg{ font-size:14px; color:var(--grass); font-weight:600; }
+  .status-msg.err{ color:#B5493D; }
+
+  /* ---------- status pill ---------- */
+  .pill{
+    display:inline-block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:100px;
+  }
+  .pill.pending{ background:#FBF0DD; color:#9C6B1B; }
+  .pill.approved{ background:#E4EFDD; color:var(--grass); }
+  .pill.denied{ background:#FBEAE7; color:#B5493D; }
+
+  /* ---------- appointment cards ---------- */
+  .appt-card{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 22px;
+    margin-top:14px;
+    background:var(--white);
+  }
+  .appt-card .row1{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .appt-card h3{ font-size:19px; font-weight:600; }
+  .appt-card .meta{
+    margin-top:4px;
+    font-size:13.5px;
+    color:#5A5A4E;
+  }
+  .appt-card .details{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px 24px;
+    font-size:14px;
+  }
+  @media (max-width:560px){ .appt-card .details{ grid-template-columns:1fr; } }
+  .appt-card .details .k{ color:#8A8A7A; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace; }
+  .appt-card .notes{ margin-top:12px; font-size:14px; color:#4A4A3E; font-style:italic; }
+  .appt-card .actions{ margin-top:16px; display:flex; gap:10px; }
+
+  .filter-row{ display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+  .filter-row button{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    padding:8px 14px;
+    border-radius:100px;
+    border:1.5px solid var(--line);
+    background:var(--cream);
+    color:var(--pine);
+    cursor:pointer;
+  }
+  .filter-row button.active{ background:var(--pine); color:var(--white); border-color:var(--pine); }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:#8A8A7A;
+  }
+  .empty-state h3{ color:var(--pine); font-size:20px; margin-bottom:8px; }
+
+  .passcode-box{ max-width:340px; margin:0 auto; text-align:center; }
+  .passcode-box h2{ font-size:24px; margin-bottom:8px; }
+  .passcode-box p{ font-size:14px; color:#8A8A7A; margin-bottom:22px; }
+
+  footer{
+    text-align:center;
+    padding:30px 24px 50px;
+    font-size:12.5px;
+    color:#9C9C8C;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .loading{ text-align:center; padding:40px; color:#8A8A7A; font-size:14px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="stripe-bg"></div>
+  <div class="hero-inner">
+    <div class="eyebrow"><span class="dot"></span> Fresh Line Lawn Co.</div>
+    <h1>Book your mow.<br>We'll take it from there.</h1>
+    <p class="sub">Tell us where and when — we'll confirm your spot within a day. No calls needed, just a clean patch of grass.</p>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button id="tab-book" class="active">Book a mow</button>
+  <button id="tab-status">Check status</button>
+  <div class="spacer"></div>
+  <button id="tab-admin" class="admin-btn">Admin</button>
+</nav>
+
+<main>
+
+  <!-- BOOK PANEL -->
+  <section id="panel-book" class="panel">
+    <h2 style="font-size:22px;">New appointment request</h2>
+    <form id="book-form">
+      <div class="field-grid">
+        <div>
+          <label for="b-name">Full name</label>
+          <input id="b-name" required placeholder="Jordan Reyes">
+        </div>
+        <div>
+          <label for="b-phone">Phone</label>
+          <input id="b-phone" required placeholder="(555) 123-4567">
+        </div>
+        <div class="full">
+          <label for="b-email">Email (optional)</label>
+          <input id="b-email" type="email" placeholder="jordan@email.com">
+        </div>
+        <div class="full">
+          <label for="b-address">Service address</label>
+          <input id="b-address" required placeholder="123 Maple St, Sanford, NC">
+        </div>
+        <div>
+          <label for="b-service">Service type</label>
+          <select id="b-service">
+            <option>Standard mow</option>
+            <option>Mow + edge + blow</option>
+            <option>Mow + trim hedges</option>
+            <option>First-time / overgrown cleanup</option>
+          </select>
+        </div>
+        <div>
+          <label for="b-date">Preferred date</label>
+          <input id="b-date" type="date" required>
+        </div>
+        <div>
+          <label for="b-time">Preferred time</label>
+          <select id="b-time">
+            <option>Morning (8–11am)</option>
+            <option>Midday (11am–2pm)</option>
+            <option>Afternoon (2–5pm)</option>
+          </select>
+        </div>
+        <div>
+          <label for="b-lawnsize">Approx. lawn size</label>
+          <select id="b-lawnsize">
+            <option>Small (under 1/4 acre)</option>
+            <option>Medium (1/4–1/2 acre)</option>
+            <option>Large (1/2 acre+)</option>
+            <option>Not sure</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="b-notes">Notes — gate code, pets, anything we should know</label>
+          <textarea id="b-notes" placeholder="Gate code is 4521, friendly dog in the backyard..."></textarea>
+        </div>
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="btn btn-primary">Request appointment</button>
+        <span id="book-msg" class="status-msg"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- STATUS PANEL -->
+  <section id="panel-status" class="panel" style="display:none;">
+    <h2 style="font-size:22px;">Check your appointment status</h2>
+    <p style="font-size:14px; color:#8A8A7A; margin-top:8px;">Enter the phone number or email you booked with.</p>
+    <div class="field-grid" style="margin-top:20px;">
+      <div class="full">
+        <label for="s-lookup">Phone or email</label>
+        <input id="s-lookup" placeholder="(555) 123-4567 or jordan@email.com">
+      </div>
+    </div>
+    <div class="submit-row">
+      <button id="s-search-btn" class="btn btn-primary">Find my appointments</button>
+      <span id="status-msg" class="status-msg"></span>
+    </div>
+    <div id="status-results" style="margin-top:10px;"></div>
+  </section>
+
+  <!-- ADMIN PASSWORD GATE -->
+  <section id="panel-admin-gate" class="panel" style="display:none;">
+    <div class="passcode-box">
+      <h2>Admin access</h2>
+      <p>Enter the admin password to view and manage bookings.</p>
+      <input id="admin-password" type="password" placeholder="Password" style="margin-bottom:14px;" autocomplete="off">
+      <button id="admin-unlock-btn" class="btn btn-primary" style="width:100%;">Unlock</button>
+      <div id="admin-gate-msg" class="status-msg err" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section id="panel-admin" class="panel" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <h2 style="font-size:22px;">All appointments</h2>
+      <button id="admin-lock-btn" class="btn btn-ghost" style="font-size:13px; padding:8px 16px;">Lock admin panel</button>
+    </div>
+    <div class="filter-row" style="margin-top:22px;">
+      <button data-filter="pending" class="active">Pending</button>
+      <button data-filter="approved">Approved</button>
+      <button data-filter="denied">Denied</button>
+      <button data-filter="all">All</button>
+    </div>
+    <div id="admin-list"></div>
+  </section>
+
+</main>
+
+<footer>fresh line lawn co. — booking &amp; admin panel</footer>
+
+<script>
+(function(){
+  // Shared admin password. Change this string to change the password everywhere
+  // (it also seeds the encryption key, so changing it makes old entries unreadable
+  // unless you re-derive with the old password).
+  const ADMIN_PASSCODE = "heybikedaddy";
+
+  // Fixed salt for key derivation. Not secret — salts just need to be unique per app,
+  // not hidden — the password is what does the protecting.
+  const KDF_SALT = "fresh-line-lawn-co-v1";
+  const KDF_ITERATIONS = 150000;
+
+  let adminUnlocked = false;
+  let cachedKey = null; // derived AES-GCM CryptoKey, cached in memory for this session only
+
+  // ---------- crypto helpers ----------
+  function bufToB64(buf){
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+  function b64ToBuf(b64){
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+  }
+  async function sha256Hex(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  function normalizePhone(p){ return (p || '').replace(/\D/g, ''); }
+  function normalizeEmail(e){ return (e || '').trim().toLowerCase(); }
+
+  // Turns the shared passcode into a proper AES-256 key via PBKDF2, instead of
+  // using the raw password bytes directly — this is standard practice and makes
+  // brute-forcing the key meaningfully slower than guessing the password itself.
+  async function deriveKey(passcode){
+    const baseKey = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(passcode), 'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name:'PBKDF2', salt:new TextEncoder().encode(KDF_SALT), iterations:KDF_ITERATIONS, hash:'SHA-256' },
+      baseKey,
+      { name:'AES-GCM', length:256 },
+      false,
+      ['encrypt','decrypt']
+    );
+  }
+
+  async function getKey(){
+    if(!cachedKey) cachedKey = await deriveKey(ADMIN_PASSCODE);
+    return cachedKey;
+  }
+
+  async function encryptPII(obj){
+    const key = await getKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plaintext = new TextEncoder().encode(JSON.stringify(obj));
+    const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plaintext);
+    return { iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+  }
+
+  async function decryptPII(record){
+    const key = await getKey();
+    const plainBuf = await crypto.subtle.decrypt(
+      { name:'AES-GCM', iv: b64ToBuf(record.iv) }, key, b64ToBuf(record.ciphertext)
+    );
+    return JSON.parse(new TextDecoder().decode(plainBuf));
+  }
+
+  const tabBook = document.getElementById('tab-book');
+  const tabStatus = document.getElementById('tab-status');
+  const tabAdmin = document.getElementById('tab-admin');
+  const panelBook = document.getElementById('panel-book');
+  const panelStatus = document.getElementById('panel-status');
+  const panelAdminGate = document.getElementById('panel-admin-gate');
+  const panelAdmin = document.getElementById('panel-admin');
+
+  function showPanel(which){
+    [panelBook, panelStatus, panelAdminGate, panelAdmin].forEach(p => p.style.display = 'none');
+    [tabBook, tabStatus, tabAdmin].forEach(t => t.classList.remove('active'));
+    if(which === 'book'){ panelBook.style.display='block'; tabBook.classList.add('active'); }
+    if(which === 'status'){ panelStatus.style.display='block'; tabStatus.classList.add('active'); }
+    if(which === 'admin'){
+      tabAdmin.classList.add('active');
+      if(adminUnlocked){ panelAdmin.style.display='block'; loadAdminList(); }
+      else { panelAdminGate.style.display='block'; }
+    }
+  }
+
+  tabBook.addEventListener('click', () => showPanel('book'));
+  tabStatus.addEventListener('click', () => showPanel('status'));
+  tabAdmin.addEventListener('click', () => showPanel('admin'));
+
+  document.getElementById('admin-unlock-btn').addEventListener('click', async () => {
+    const entered = document.getElementById('admin-password').value;
+    const msg = document.getElementById('admin-gate-msg');
+    if(entered === ADMIN_PASSCODE){
+      msg.textContent = '';
+      adminUnlocked = true;
+      document.getElementById('admin-password').value = '';
+      showPanel('admin');
+    } else {
+      msg.textContent = 'Incorrect password. Try again.';
+    }
+  });
+
+  document.getElementById('admin-password').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') document.getElementById('admin-unlock-btn').click();
+  });
+
+  document.getElementById('admin-lock-btn').addEventListener('click', () => {
+    adminUnlocked = false;
+    cachedKey = null; // wipe the derived key from memory too
+    showPanel('admin');
+  });
+
+  // ---------- storage helpers ----------
+  function genId(){
+    return 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  async function saveAppointment(appt){
+    return await window.storage.set('appt:' + appt.id, JSON.stringify(appt), true);
+  }
+
+  async function listAppointments(){
+    try{
+      const listRes = await window.storage.list('appt:', true);
+      if(!listRes || !listRes.keys || listRes.keys.length === 0) return [];
+      const results = [];
+      for(const k of listRes.keys){
+        try{
+          const r = await window.storage.get(k, true);
+          if(r && r.value) results.push(JSON.parse(r.value));
+        } catch(e){ /* skip unreadable key */ }
+      }
+      results.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return results;
+    } catch(e){
+      console.error('list error', e);
+      return [];
+    }
+  }
+
+  // ---------- booking form ----------
+  document.getElementById('book-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('book-msg');
+    msg.classList.remove('err');
+    msg.textContent = 'Submitting...';
+
+    const name = document.getElementById('b-name').value.trim();
+    const phone = document.getElementById('b-phone').value.trim();
+    const email = document.getElementById('b-email').value.trim();
+    const address = document.getElementById('b-address').value.trim();
+    const notes = document.getElementById('b-notes').value.trim();
+
+    if(!name || !phone || !address || !document.getElementById('b-date').value){
+      msg.textContent = 'Please fill in the required fields.';
+      msg.classList.add('err');
+      return;
+    }
+
+    try{
+      const enc = await encryptPII({ name, phone, email, address, notes });
+      const appt = {
+        id: genId(),
+        service: document.getElementById('b-service').value,
+        date: document.getElementById('b-date').value,
+        time: document.getElementById('b-time').value,
+        lawnSize: document.getElementById('b-lawnsize').value,
+        status: 'pending',
+        createdAt: Date.now(),
+        phoneHash: await sha256Hex(normalizePhone(phone)),
+        emailHash: email ? await sha256Hex(normalizeEmail(email)) : '',
+        iv: enc.iv,
+        ciphertext: enc.ciphertext
+      };
+      const result = await saveAppointment(appt);
+      if(result){
+        msg.textContent = 'Request sent! We\'ll confirm soon.';
+        document.getElementById('book-form').reset();
+      } else {
+        msg.textContent = 'Something went wrong. Please try again.';
+        msg.classList.add('err');
+      }
+    } catch(err){
+      console.error(err);
+      msg.textContent = 'Something went wrong. Please try again.';
+      msg.classList.add('err');
+    }
+  });
+
+  // ---------- status lookup ----------
+  // This matches on a one-way hash of the phone/email rather than storing them in
+  // the clear, and only shows status/schedule — no need to decrypt anything here.
+  document.getElementById('s-search-btn').addEventListener('click', async () => {
+    const query = document.getElementById('s-lookup').value.trim();
+    const msg = document.getElementById('status-msg');
+    const results = document.getElementById('status-results');
+    results.innerHTML = '';
+    if(!query){
+      msg.textContent = 'Enter a phone number or email.';
+      msg.classList.add('err');
+      return;
+    }
+    msg.classList.remove('err');
+    msg.textContent = 'Searching...';
+    const phoneHash = await sha256Hex(normalizePhone(query));
+    const emailHash = await sha256Hex(normalizeEmail(query));
+    const all = await listAppointments();
+    const matches = all.filter(a =>
+      (a.phoneHash && a.phoneHash === phoneHash) ||
+      (a.emailHash && a.emailHash === emailHash)
+    );
+    msg.textContent = matches.length ? '' : 'No appointments found for that phone or email.';
+    if(matches.length === 0) return;
+    results.innerHTML = matches.map(renderStatusCard).join('');
+  });
+
+  function renderStatusCard(a){
+    return `
+      <div class="appt-card">
+        <div class="row1">
+          <div>
+            <h3>${escapeHtml(a.service || 'Appointment')}</h3>
+            <div class="meta">${escapeHtml(a.date || '')} · ${escapeHtml(a.time || '')}</div>
+          </div>
+          <span class="pill ${a.status}">${a.status}</span>
+        </div>
+      </div>`;
+  }
+
+  // ---------- rendering ----------
+  function renderCard(a){
+    const pill = `<span class="pill ${a.status}">${a.status}</span>`;
+    const actions = `
+      <div class="actions">
+        <button class="btn btn-approve" data-action="approve" data-id="${a.id}" ${a.status==='approved'?'disabled':''}>Approve</button>
+        <button class="btn btn-deny" data-action="deny" data-id="${a.id}" ${a.status==='denied'?'disabled':''}>Deny</button>
+      </div>`;
+
+    if(a.decryptFailed){
+      return `
+        <div class="appt-card">
+          <div class="row1">
+            <div>
+              <h3>🔒 Unable to decrypt</h3>
+              <div class="meta">${escapeHtml(a.date || '')} · ${escapeHtml(a.time || '')} · ${escapeHtml(a.service || '')}</div>
+            </div>
+            ${pill}
+          </div>
+          <div class="notes">This entry couldn't be decrypted. It may have been created with a different password.</div>
+          ${actions}
+        </div>`;
+    }
+
+    return `
+      <div class="appt-card">
+        <div class="row1">
+          <div>
+            <h3>${escapeHtml(a.name || 'Unknown')}</h3>
+            <div class="meta">${escapeHtml(a.date || '')} · ${escapeHtml(a.time || '')} · ${escapeHtml(a.service || '')}</div>
+          </div>
+          ${pill}
+        </div>
+        <div class="details">
+          <div><div class="k">Phone</div>${escapeHtml(a.phone || '—')}</div>
+          <div><div class="k">Email</div>${escapeHtml(a.email || '—')}</div>
+          <div><div class="k">Address</div>${escapeHtml(a.address || '—')}</div>
+          <div><div class="k">Lawn size</div>${escapeHtml(a.lawnSize || '—')}</div>
+        </div>
+        ${a.notes ? `<div class="notes">"${escapeHtml(a.notes)}"</div>` : ''}
+        ${actions}
+      </div>`;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- admin list ----------
+  let currentFilter = 'pending';
+
+  document.querySelectorAll('.filter-row button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-row button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      loadAdminList();
+    });
+  });
+
+  async function loadAdminList(){
+    const listEl = document.getElementById('admin-list');
+    listEl.innerHTML = '<div class="loading">Loading and decrypting appointments...</div>';
+    const all = await listAppointments();
+    const filtered = currentFilter === 'all' ? all : all.filter(a => a.status === currentFilter);
+
+    if(filtered.length === 0){
+      listEl.innerHTML = `<div class="empty-state"><h3>Nothing here</h3><p>No ${currentFilter === 'all' ? '' : currentFilter} appointments right now.</p></div>`;
+      return;
+    }
+
+    const decrypted = await Promise.all(filtered.map(async (a) => {
+      try{
+        const pii = await decryptPII(a);
+        return Object.assign({}, a, pii);
+      } catch(err){
+        return Object.assign({}, a, { decryptFailed: true });
+      }
+    }));
+
+    listEl.innerHTML = decrypted.map(renderCard).join('');
+
+    listEl.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        btn.disabled = true;
+        btn.textContent = '...';
+        const all2 = await listAppointments();
+        const appt = all2.find(a => a.id === id);
+        if(!appt) return;
+        appt.status = action === 'approve' ? 'approved' : 'denied';
+        await saveAppointment(appt);
+        loadAdminList();
+      });
+    });
+  }
+
+  // default min date = today
+  document.getElementById('b-date').min = new Date().toISOString().split('T')[0];
+
+})();
+</script>
+
+</body>
+</html>
